@@ -10,9 +10,9 @@ namespace Market_Otomasyonu.Models
 
         [Required]
         [MaxLength(100)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         // Navigation Property: A category can have many products
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();

@@ -11,11 +11,11 @@ namespace Market_Otomasyonu.Models
 
         [Required]
         [MaxLength(50)]
-        public string Barcode { get; set; } // Indexed for fast search
+        public string Barcode { get; set; } = string.Empty;
 
         [Required]
         [MaxLength(200)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         public string? Description { get; set; }
 
@@ -29,7 +29,7 @@ namespace Market_Otomasyonu.Models
         public int CriticalStockLevel { get; set; } = 10;
 
         public int? CategoryId { get; set; }
-        public virtual Category Category { get; set; }
+        public virtual Category? Category { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;

@@ -12,12 +12,12 @@ namespace Market_Otomasyonu.Models
 
         [Required]
         [MaxLength(100)]
-        public string FullName { get; set; }
+        public string FullName { get; set; } = string.Empty;
 
         [MaxLength(20)]
-        public string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
 
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         public int LoyaltyPoints { get; set; }
 

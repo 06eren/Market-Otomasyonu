@@ -51,10 +51,17 @@ namespace Market_Otomasyonu
 
                 // Backend Integration
                 var productService = new Services.ProductService();
+                var saleService = new Services.SaleService();
+                var customerService = new Services.CustomerService();
+                var settingsService = new Services.SettingsService();
+                
                 await productService.SeedInitialDataAsync();
                 
-                // Add Host Object for Interop
+                // Add Host Objects for Interop
                 webView.CoreWebView2.AddHostObjectToScript("productService", productService);
+                webView.CoreWebView2.AddHostObjectToScript("saleService", saleService);
+                webView.CoreWebView2.AddHostObjectToScript("customerService", customerService);
+                webView.CoreWebView2.AddHostObjectToScript("settingsService", settingsService);
 
                 // Navigate to the app
                 webView.CoreWebView2.Navigate("http://market.app/index.html");

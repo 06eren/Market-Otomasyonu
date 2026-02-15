@@ -32,7 +32,7 @@ namespace Market_Otomasyonu.Models
         public PaymentMethod PaymentMethod { get; set; }
 
         public int? CustomerId { get; set; }
-        public virtual Customer Customer { get; set; }
+        public virtual Customer? Customer { get; set; }
 
         public DateTime Date { get; set; } = DateTime.Now;
 
