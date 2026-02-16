@@ -1,0 +1,12 @@
+.card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.noPadding {
+    padding: 0;
+}

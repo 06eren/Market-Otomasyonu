@@ -1,0 +1,53 @@
+.wrapper {
+    width: 100%;
+}
+
+.label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.375rem;
+}
+
+.label span {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.track {
+    width: 100%;
+    background: var(--bg-surface-active);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.sm {
+    height: 4px;
+}
+
+.md {
+    height: 8px;
+}
+
+.fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s ease;
+}
+
+.accent {
+    background: var(--accent-primary);
+}
+
+.success {
+    background: var(--success);
+}
+
+.warning {
+    background: var(--warning);
+}
+
+.danger {
+    background: var(--danger);
+}
