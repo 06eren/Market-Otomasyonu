@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Market_Otomasyonu.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
 namespace Market_Otomasyonu.Services
@@ -27,19 +29,17 @@ namespace Market_Otomasyonu.Services
     [ComVisible(true)]
     public class SaleService
     {
-        private readonly Data.IUnitOfWork _unitOfWork;
-
-        public SaleService()
+        private static Data.IUnitOfWork CreateUnitOfWork()
         {
-            var context = new Data.MarketContext();
-            _unitOfWork = new Data.UnitOfWork(context);
+            return new Data.UnitOfWork(new Data.MarketContext());
         }
 
         public async Task<string> ProcessSaleAsync(string saleJson)
         {
             try
             {
-                var saleDto = System.Text.Json.JsonSerializer.Deserialize<SaleDto>(saleJson);
+                using var uow = CreateUnitOfWork();
+                var saleDto = JsonSerializer.Deserialize<SaleDto>(saleJson);
                 if (saleDto == null || saleDto.Items == null || !saleDto.Items.Any())
                     throw new Exception("Geçersiz satış verisi.");
 
@@ -53,18 +53,18 @@ namespace Market_Otomasyonu.Services
                     CustomerId = saleDto.CustomerId
                 };
 
-                await _unitOfWork.Sales.AddAsync(sale);
+                await uow.Sales.AddAsync(sale);
 
                 foreach (var itemDto in saleDto.Items)
                 {
-                    var product = await _unitOfWork.Products.GetByIdAsync(itemDto.ProductId);
+                    var product = await uow.Products.GetByIdAsync(itemDto.ProductId);
                     if (product == null) throw new Exception($"Ürün bulunamadı: {itemDto.ProductId}");
 
                     if (product.StockQuantity < itemDto.Quantity)
                         throw new Exception($"Yetersiz stok: {product.Name}");
 
                     product.StockQuantity -= itemDto.Quantity;
-                    _unitOfWork.Products.Update(product);
+                    uow.Products.Update(product);
 
                     var saleItem = new SaleItem
                     {
@@ -80,50 +80,59 @@ namespace Market_Otomasyonu.Services
                 // Veresiye satışta müşteri borcunu güncelle
                 if (saleDto.PaymentMethod == 2 && saleDto.CustomerId.HasValue)
                 {
-                    var customer = await _unitOfWork.Customers.GetByIdAsync(saleDto.CustomerId.Value);
+                    var customer = await uow.Customers.GetByIdAsync(saleDto.CustomerId.Value);
                     if (customer != null)
                     {
                         customer.DebtBalance += saleDto.TotalAmount;
-                        _unitOfWork.Customers.Update(customer);
+                        uow.Customers.Update(customer);
                     }
                 }
 
-                await _unitOfWork.CompleteAsync();
-                return "{\"success\": true}";
+                await uow.CompleteAsync();
+                return JsonSerializer.Serialize(new { success = true });
             }
             catch (Exception ex)
             {
-                return $"{{\"success\": false, \"message\": \"{ex.Message}\"}}";
+                return JsonSerializer.Serialize(new { success = false, message = ex.Message });
             }
         }
 
         public async Task<string> GetRecentSalesAsync()
         {
-            // Simple logic: fetch all, sort descending. Pagination should be added for real production.
-            var sales = await _unitOfWork.Sales.GetAllAsync();
-            var dtos = sales.OrderByDescending(s => s.Date).Take(20).Select(s => new {
-                Id = s.TransactionId.Substring(0, 8).ToUpper(),
-                Date = s.Date.ToString("dd.MM.yyyy HH:mm"),
-                Amount = s.TotalAmount,
-                Status = "Tamamlandı" // Logic for cancelled/pending could be added
-            });
-            return System.Text.Json.JsonSerializer.Serialize(dtos);
+            using var uow = CreateUnitOfWork();
+            var dtos = await uow.Sales.Query()
+                .OrderByDescending(s => s.Date)
+                .Take(20)
+                .Select(s => new {
+                    Id = s.TransactionId.Substring(0, 8).ToUpper(),
+                    Date = s.Date.ToString("dd.MM.yyyy HH:mm"),
+                    Amount = s.TotalAmount,
+                    Status = "Tamamlandı"
+                })
+                .ToListAsync();
+            return JsonSerializer.Serialize(dtos);
         }
 
         public async Task<string> GetDashboardStatsAsync()
         {
+            using var uow = CreateUnitOfWork();
             var today = DateTime.Today;
-            var sales = await _unitOfWork.Sales.GetAllAsync();
-            var dailySales = sales.Where(s => s.Date.Date == today).ToList();
+
+            var dailySales = await uow.Sales.Query()
+                .Where(s => s.Date.Date == today)
+                .ToListAsync();
             
+            var totalStock = await uow.Products.Query()
+                .SumAsync(p => p.StockQuantity);
+
             var stats = new
             {
                 DailyTurnover = dailySales.Sum(s => s.TotalAmount),
                 DailyTransactions = dailySales.Count,
-                TotalStock = (await _unitOfWork.Products.GetAllAsync()).Sum(p => p.StockQuantity)
+                TotalStock = totalStock
             };
 
-            return System.Text.Json.JsonSerializer.Serialize(stats);
+            return JsonSerializer.Serialize(stats);
         }
     }
 }

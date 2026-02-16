@@ -9,6 +9,7 @@ import { SkeletonCard } from '@/components/ui/Skeleton';
 import { ArrowUpRight, TrendingUp, Package, ShoppingCart, AlertTriangle, Clock, Download, Plus, DollarSign, Users, ArrowDownRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getDashboardStats, getInvoices, getLowStockProducts, getProducts, getCustomers } from '@/lib/api';
+import eventBus from '@/lib/eventBus';
 import Link from 'next/link';
 
 export default function Home() {
@@ -19,7 +20,7 @@ export default function Home() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const refreshAll = () => {
     Promise.all([
       getDashboardStats().then(data => setStats(data)),
       getInvoices().then(data => setRecentSales(data)),
@@ -27,6 +28,17 @@ export default function Home() {
       getProducts().then(data => setProducts(data)),
       getCustomers().then(data => setCustomers(data)),
     ]).then(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    refreshAll();
+    // Auto-polling every 30 seconds
+    const interval = setInterval(refreshAll, 30000);
+    // Event-driven instant refresh
+    const unsub1 = eventBus.on('sale', refreshAll);
+    const unsub2 = eventBus.on('stock-change', refreshAll);
+    const unsub3 = eventBus.on('debt-change', refreshAll);
+    return () => { clearInterval(interval); unsub1(); unsub2(); unsub3(); };
   }, []);
 
   const avgBasket = stats.DailyTransactions > 0

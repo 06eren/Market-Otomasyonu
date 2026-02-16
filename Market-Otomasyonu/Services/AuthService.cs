@@ -17,11 +17,39 @@ namespace Market_Otomasyonu.Services
     {
         private int? _currentEmployeeId;
 
+        // PBKDF2 with random salt — returns "salt:hash" format
         private static string HashPassword(string password)
         {
+            var salt = RandomNumberGenerator.GetBytes(16);
+            var hash = Rfc2898DeriveBytes.Pbkdf2(
+                Encoding.UTF8.GetBytes(password), salt,
+                iterations: 100_000, HashAlgorithmName.SHA256, outputLength: 32);
+            return $"{Convert.ToBase64String(salt)}:{Convert.ToBase64String(hash)}";
+        }
+
+        private static bool VerifyPassword(string password, string storedHash)
+        {
+            // Support new PBKDF2 format (salt:hash)
+            if (storedHash.Contains(':'))
+            {
+                var parts = storedHash.Split(':');
+                var salt = Convert.FromBase64String(parts[0]);
+                var expectedHash = Convert.FromBase64String(parts[1]);
+                var actualHash = Rfc2898DeriveBytes.Pbkdf2(
+                    Encoding.UTF8.GetBytes(password), salt,
+                    iterations: 100_000, HashAlgorithmName.SHA256, outputLength: 32);
+                return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
+            }
+            // Legacy SHA256 fallback (for existing users)
             using var sha256 = SHA256.Create();
-            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToHexString(bytes).ToLowerInvariant();
+            var legacyHash = Convert.ToHexString(sha256.ComputeHash(Encoding.UTF8.GetBytes(password))).ToLowerInvariant();
+            return legacyHash == storedHash;
+        }
+
+        // JSON-safe error message to prevent injection
+        private static string SafeJsonError(string message)
+        {
+            return JsonSerializer.Serialize(new { success = false, message });
         }
 
         public void EnsureDatabase()
@@ -80,12 +108,17 @@ namespace Market_Otomasyonu.Services
             try
             {
                 using var ctx = new MarketContext();
-                var hash = HashPassword(password);
                 var emp = await ctx.Employees.FirstOrDefaultAsync(e =>
-                    e.Username == username && e.PasswordHash == hash && e.IsActive);
+                    e.Username == username && e.IsActive);
 
-                if (emp == null)
-                    return "{\"success\":false,\"message\":\"Kullanıcı adı veya şifre hatalı!\"}";
+                if (emp == null || !VerifyPassword(password, emp.PasswordHash))
+                    return SafeJsonError("Kullanıcı adı veya şifre hatalı!");
+
+                // Auto-upgrade legacy SHA256 hash to PBKDF2
+                if (!emp.PasswordHash.Contains(':'))
+                {
+                    emp.PasswordHash = HashPassword(password);
+                }
 
                 emp.LastLoginAt = DateTime.Now;
                 ctx.ActivityLogs.Add(new ActivityLog
@@ -116,7 +149,7 @@ namespace Market_Otomasyonu.Services
             }
             catch (Exception ex)
             {
-                return $"{{\"success\":false,\"message\":\"{ex.Message}\"}}";
+                return SafeJsonError(ex.Message);
             }
         }
 
@@ -141,7 +174,7 @@ namespace Market_Otomasyonu.Services
             }
             catch (Exception ex)
             {
-                return $"{{\"success\":false,\"message\":\"{ex.Message}\"}}";
+                return SafeJsonError(ex.Message);
             }
         }
 
@@ -199,9 +232,9 @@ namespace Market_Otomasyonu.Services
                     .ToListAsync();
                 return JsonSerializer.Serialize(list);
             }
-            catch (Exception ex)
+            catch
             {
-                return $"[]";
+                return "[]";
             }
         }
 
@@ -257,7 +290,7 @@ namespace Market_Otomasyonu.Services
             }
             catch (Exception ex)
             {
-                return $"{{\"success\":false,\"message\":\"{ex.Message}\"}}";
+                return SafeJsonError(ex.Message);
             }
         }
 
@@ -291,7 +324,7 @@ namespace Market_Otomasyonu.Services
             }
             catch (Exception ex)
             {
-                return $"{{\"success\":false,\"message\":\"{ex.Message}\"}}";
+                return SafeJsonError(ex.Message);
             }
         }
 
@@ -318,7 +351,7 @@ namespace Market_Otomasyonu.Services
             }
             catch (Exception ex)
             {
-                return $"{{\"success\":false,\"message\":\"{ex.Message}\"}}";
+                return SafeJsonError(ex.Message);
             }
         }
 

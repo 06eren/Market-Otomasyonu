@@ -10,10 +10,10 @@ namespace Market_Otomasyonu
         public MainWindow()
         {
             InitializeComponent();
-            InitializeAsync();
+            Loaded += async (_, _) => await InitializeAsync();
         }
 
-        async void InitializeAsync()
+        async Task InitializeAsync()
         {
             try
             {
@@ -23,14 +23,24 @@ namespace Market_Otomasyonu
 
                 await webView.EnsureCoreWebView2Async(env);
 
-                // Map the frontend output folder to a virtual domain
-                // Hardcoding the path for development phase as requested
-                // In production, this should be relative to AppDomain.CurrentDomain.BaseDirectory
-                var frontendPath = @"e:\CSharp\Market-Otomasyonu\frontend\out";
-                
+                // Frontend path resolution: wwwroot next to the executable
+                var basePath = AppDomain.CurrentDomain.BaseDirectory;
+                var frontendPath = Path.Combine(basePath, "wwwroot");
+
+                // In DEBUG mode, also check solution-relative frontend/out
+#if DEBUG
                 if (!Directory.Exists(frontendPath))
                 {
-                    MessageBox.Show($"Frontend path not found: {frontendPath}\nPlease build the Next.js project first.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    var solutionDir = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", ".."));
+                    var devPath = Path.Combine(solutionDir, "frontend", "out");
+                    if (Directory.Exists(devPath))
+                        frontendPath = devPath;
+                }
+#endif
+
+                if (!Directory.Exists(frontendPath))
+                {
+                    MessageBox.Show($"Frontend dosyaları bulunamadı!\n\nAranan konum:\n{frontendPath}\n\nLütfen önce Next.js projesini build edin:\ncd frontend && npm run build", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 

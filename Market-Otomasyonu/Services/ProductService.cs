@@ -19,18 +19,15 @@ namespace Market_Otomasyonu.Services
     [ComVisible(true)]
     public class ProductService
     {
-        private readonly Data.IUnitOfWork _unitOfWork;
-
-        public ProductService()
+        private static Data.IUnitOfWork CreateUnitOfWork()
         {
-            // Ideally use DI, but for Interop simplicity with MainWindow instance logic:
-            var context = new Data.MarketContext(); // In a real app, use a factory or DI scope
-            _unitOfWork = new Data.UnitOfWork(context);
+            return new Data.UnitOfWork(new Data.MarketContext());
         }
 
         public async Task<string> GetProductsJsonAsync()
         {
-            var products = await _unitOfWork.Products.GetAllAsync();
+            using var uow = CreateUnitOfWork();
+            var products = await uow.Products.GetAllAsync();
             var dtos = System.Linq.Enumerable.Select(products, p => new
             {
                 p.Id, p.Barcode, p.Name, p.Description,
@@ -45,6 +42,7 @@ namespace Market_Otomasyonu.Services
         {
             try
             {
+                using var uow = CreateUnitOfWork();
                 var product = System.Text.Json.JsonSerializer.Deserialize<Product>(productJson);
                 if (product == null) return false;
 
@@ -53,15 +51,15 @@ namespace Market_Otomasyonu.Services
                     throw new Exception("Barkod ve Ürün Adı zorunludur.");
 
                 // Check duplicate barcode
-                var existing = await _unitOfWork.Products.FindAsync(p => p.Barcode == product.Barcode);
+                var existing = await uow.Products.FindAsync(p => p.Barcode == product.Barcode);
                 if (System.Linq.Enumerable.Any(existing))
                     throw new Exception("Bu barkod ile kayıtlı ürün zaten var.");
 
                 product.CreatedAt = DateTime.Now;
                 product.UpdatedAt = DateTime.Now;
 
-                await _unitOfWork.Products.AddAsync(product);
-                await _unitOfWork.CompleteAsync();
+                await uow.Products.AddAsync(product);
+                await uow.CompleteAsync();
                 return true;
             }
             catch
@@ -74,10 +72,11 @@ namespace Market_Otomasyonu.Services
         {
             try
             {
+                using var uow = CreateUnitOfWork();
                 var dto = System.Text.Json.JsonSerializer.Deserialize<Product>(productJson);
                 if (dto == null) return "{\"success\":false,\"message\":\"Geçersiz veri\"}";
 
-                var product = await _unitOfWork.Products.GetByIdAsync(dto.Id);
+                var product = await uow.Products.GetByIdAsync(dto.Id);
                 if (product == null) return "{\"success\":false,\"message\":\"Ürün bulunamadı\"}";
 
                 product.Name = dto.Name;
@@ -90,19 +89,20 @@ namespace Market_Otomasyonu.Services
                 product.CategoryId = dto.CategoryId;
                 product.UpdatedAt = DateTime.Now;
 
-                _unitOfWork.Products.Update(product);
-                await _unitOfWork.CompleteAsync();
+                uow.Products.Update(product);
+                await uow.CompleteAsync();
                 return "{\"success\":true}";
             }
             catch (Exception ex)
             {
-                return $"{{\"success\":false,\"message\":\"{ex.Message}\"}}";
+                return System.Text.Json.JsonSerializer.Serialize(new { success = false, message = ex.Message });
             }
         }
 
         public async Task<string> GetProductByBarcodeAsync(string barcode)
         {
-            var products = await _unitOfWork.Products.FindAsync(p => p.Barcode == barcode);
+            using var uow = CreateUnitOfWork();
+            var products = await uow.Products.FindAsync(p => p.Barcode == barcode);
             var product = System.Linq.Enumerable.FirstOrDefault(products);
             if (product == null) return "null";
             var dto = new
@@ -117,7 +117,8 @@ namespace Market_Otomasyonu.Services
 
         public async Task<string> GetCategoriesJsonAsync()
         {
-            var categories = await _unitOfWork.Categories.GetAllAsync();
+            using var uow = CreateUnitOfWork();
+            var categories = await uow.Categories.GetAllAsync();
             var dtos = System.Linq.Enumerable.Select(categories, c => new
             {
                 c.Id, c.Name, c.Description
@@ -127,7 +128,8 @@ namespace Market_Otomasyonu.Services
 
         public async Task<string> GetLowStockProductsAsync()
         {
-            var products = await _unitOfWork.Products.FindAsync(p => p.StockQuantity <= p.CriticalStockLevel);
+            using var uow = CreateUnitOfWork();
+            var products = await uow.Products.FindAsync(p => p.StockQuantity <= p.CriticalStockLevel);
             var dtos = System.Linq.Enumerable.Select(products, p => new
             {
                 p.Id, p.Name, p.Barcode, p.StockQuantity, p.CriticalStockLevel
@@ -137,22 +139,21 @@ namespace Market_Otomasyonu.Services
 
         public async Task<bool> DeleteProductAsync(int id)
         {
-            var product = await _unitOfWork.Products.GetByIdAsync(id);
+            using var uow = CreateUnitOfWork();
+            var product = await uow.Products.GetByIdAsync(id);
             if (product == null) return false;
 
-            _unitOfWork.Products.Remove(product);
-            await _unitOfWork.CompleteAsync();
+            uow.Products.Remove(product);
+            await uow.CompleteAsync();
             return true;
         }
 
         public async Task SeedInitialDataAsync()
         {
-             var existing = await _unitOfWork.Products.GetAllAsync();
+             using var uow = CreateUnitOfWork();
+             var existing = await uow.Products.GetAllAsync();
              if (System.Linq.Enumerable.Any(existing)) return;
 
-             // Ensure Categories exist first - EF Core HasData in OnModelCreating handles creation, 
-             // but we must ensure they are saved if migration didn't run properly (though it should have).
-             
              // Add Products
              var p1 = new Product { Name = "Ekmek", Barcode = "8690001", SalePrice = 10.00m, PurchasePrice = 8.50m, StockQuantity = 100, CategoryId = 1, Description = "Taze odun ekmeği" };
              var p2 = new Product { Name = "Süt", Barcode = "8690002", SalePrice = 25.00m, PurchasePrice = 20.00m, StockQuantity = 50, CategoryId = 1, Description = "Tam yağlı inek sütü" };
@@ -160,8 +161,8 @@ namespace Market_Otomasyonu.Services
              var p4 = new Product { Name = "Çamaşır Suyu", Barcode = "8690004", SalePrice = 45.50m, PurchasePrice = 30.00m, StockQuantity = 20, CategoryId = 2, Description = "Dağ esintisi" };
              var p5 = new Product { Name = "Domates (kg)", Barcode = "8690005", SalePrice = 35.00m, PurchasePrice = 25.00m, StockQuantity = 500, CategoryId = 3, Description = "Antalya domatesi" };
 
-             await _unitOfWork.Products.AddRangeAsync(new[] { p1, p2, p3, p4, p5 });
-             await _unitOfWork.CompleteAsync();
+             await uow.Products.AddRangeAsync(new[] { p1, p2, p3, p4, p5 });
+             await uow.CompleteAsync();
         }
     }
 }

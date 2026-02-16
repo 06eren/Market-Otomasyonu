@@ -22,4 +22,9 @@
     <Resource Include="InnoAppMarketIkon.png" />
   </ItemGroup>
 
+  <!-- Frontend static files: copy frontend/out → wwwroot in output -->
+  <ItemGroup>
+    <None Include="..\frontend\out\**" CopyToOutputDirectory="PreserveNewest" LinkBase="wwwroot" />
+  </ItemGroup>
+
 </Project>

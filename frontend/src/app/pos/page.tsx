@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { Search, ShoppingCart, CreditCard, Banknote, Trash2, Plus, Minus, Tag, Receipt, CheckCircle2, User, Star, Printer, Calculator } from 'lucide-react';
 import styles from './pos.module.css';
 import { getProducts, getCategories, getCustomers, processSale, getProductByBarcode } from '@/lib/api';
+import eventBus from '@/lib/eventBus';
 
 interface Product {
     Id: number; Name: string; Barcode: string; SalePrice: number;
@@ -135,6 +136,9 @@ export default function POSPage() {
             setCart([]); setDiscount(0); setSelectedCustomer(null);
             loadProducts();
             getCustomers().then(data => setCustomers(data));
+            eventBus.emit('sale');
+            eventBus.emit('stock-change');
+            if (saleData.PaymentMethod === 2) eventBus.emit('debt-change');
             showToast(`Satış başarılı! ₺${totalAmount.toFixed(2)}`, 'success');
         } else {
             showToast('Hata: ' + (result?.message || 'Satış işlenemedi'), 'error');

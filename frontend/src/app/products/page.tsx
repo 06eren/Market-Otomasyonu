@@ -129,7 +129,7 @@ export default function ProductsPage() {
 
     const categoryOptions = categories.map((c: any) => ({ value: c.Id, label: c.Name }));
 
-    const ProductForm = () => (
+    const productFormJSX = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <Input label="Barkod *" value={formData.Barcode} onChange={e => setFormData({ ...formData, Barcode: e.target.value })} placeholder="Barkod numarası" />
@@ -222,7 +222,7 @@ export default function ProductsPage() {
                     <Button variant="outline" onClick={() => setShowAddModal(false)}>İptal</Button>
                     <Button onClick={handleAdd} isLoading={saving} icon={<Plus size={16} />}>Ürün Ekle</Button>
                 </>}>
-                <ProductForm />
+                {productFormJSX}
             </Modal>
 
             {/* Edit Modal */}
@@ -231,7 +231,7 @@ export default function ProductsPage() {
                     <Button variant="outline" onClick={() => setShowEditModal(false)}>İptal</Button>
                     <Button onClick={handleUpdate} isLoading={saving} icon={<Edit size={16} />}>Güncelle</Button>
                 </>}>
-                <ProductForm />
+                {productFormJSX}
             </Modal>
 
             {/* Delete Confirmation */}

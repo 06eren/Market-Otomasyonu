@@ -18,6 +18,11 @@ namespace Market_Otomasyonu.Data
             _dbSet = _context.Set<T>();
         }
 
+        public IQueryable<T> Query()
+        {
+            return _dbSet.AsQueryable();
+        }
+
         public async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();

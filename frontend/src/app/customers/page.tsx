@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
-import { Plus, Search, Edit, Trash2, Users, Phone, Mail, Wallet } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Users, Phone, Mail, Wallet, Banknote } from 'lucide-react';
 import styles from '../dashboard.module.css';
-import { getCustomers, addCustomer, updateCustomer, deleteCustomer } from '@/lib/api';
+import { getCustomers, addCustomer, updateCustomer, deleteCustomer, payDebt } from '@/lib/api';
+import eventBus from '@/lib/eventBus';
 
 interface Customer {
     Id: number;
@@ -30,9 +31,11 @@ export default function CustomersPage() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDebtModal, setShowDebtModal] = useState(false);
     const [formData, setFormData] = useState<any>(emptyCustomer);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [saving, setSaving] = useState(false);
+    const [debtAmount, setDebtAmount] = useState('');
     const { showToast } = useToast();
 
     useEffect(() => { loadCustomers(); }, []);
@@ -100,7 +103,38 @@ export default function CustomersPage() {
         }
     };
 
-    const CustomerForm = () => (
+    // ── Borç Ödeme ──
+    const handleDebtOpen = (customer: Customer) => {
+        setSelectedCustomer(customer);
+        setDebtAmount('');
+        setShowDebtModal(true);
+    };
+
+    const handlePayDebt = async () => {
+        if (!selectedCustomer) return;
+        const amount = parseFloat(debtAmount);
+        if (!amount || amount <= 0) {
+            showToast('Geçerli bir tutar girin', 'warning');
+            return;
+        }
+        if (amount > selectedCustomer.DebtBalance) {
+            showToast('Tutar borç bakiyesinden büyük olamaz', 'warning');
+            return;
+        }
+        setSaving(true);
+        const result = await payDebt(selectedCustomer.Id, amount);
+        if (result?.success) {
+            showToast(result.message || 'Ödeme alındı', 'success');
+            setShowDebtModal(false);
+            eventBus.emit('debt-change');
+            await loadCustomers();
+        } else {
+            showToast(result?.message || 'Ödeme başarısız', 'error');
+        }
+        setSaving(false);
+    };
+
+    const customerFormJSX = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <Input label="Ad Soyad *" value={formData.FullName} onChange={e => setFormData({ ...formData, FullName: e.target.value })} placeholder="Müşteri adı soyadı" />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -195,6 +229,9 @@ export default function CustomersPage() {
                                 <td style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.CreatedAt}</td>
                                 <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
                                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.25rem' }}>
+                                        {(c.DebtBalance || 0) > 0 && (
+                                            <Button variant="ghost" size="sm" icon={<Banknote size={14} />} style={{ color: 'var(--success)' }} onClick={() => handleDebtOpen(c)}>Öde</Button>
+                                        )}
                                         <Button variant="ghost" size="sm" icon={<Edit size={14} />} onClick={() => handleEditOpen(c)} />
                                         <Button variant="ghost" size="sm" icon={<Trash2 size={14} />} style={{ color: 'var(--danger)' }} onClick={() => handleDeleteConfirm(c)} />
                                     </div>
@@ -208,13 +245,13 @@ export default function CustomersPage() {
             {/* Add Modal */}
             <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Yeni Müşteri" size="md"
                 footer={<><Button variant="outline" onClick={() => setShowAddModal(false)}>İptal</Button><Button onClick={handleAdd} isLoading={saving} icon={<Plus size={16} />}>Ekle</Button></>}>
-                <CustomerForm />
+                {customerFormJSX}
             </Modal>
 
             {/* Edit Modal */}
             <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title={`Düzenle: ${selectedCustomer?.FullName}`} size="md"
                 footer={<><Button variant="outline" onClick={() => setShowEditModal(false)}>İptal</Button><Button onClick={handleUpdate} isLoading={saving} icon={<Edit size={16} />}>Güncelle</Button></>}>
-                <CustomerForm />
+                {customerFormJSX}
             </Modal>
 
             {/* Delete Modal */}
@@ -225,6 +262,63 @@ export default function CustomersPage() {
                     <p><strong>{selectedCustomer?.FullName}</strong> müşterisini silmek istediğinize emin misiniz?</p>
                     <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Bu işlem geri alınamaz.</p>
                 </div>
+            </Modal>
+
+            {/* Borç Ödeme Modalı */}
+            <Modal isOpen={showDebtModal} onClose={() => setShowDebtModal(false)} title="Borç Ödeme" size="sm"
+                footer={<><Button variant="outline" onClick={() => setShowDebtModal(false)}>İptal</Button><Button icon={<Banknote size={16} />} onClick={handlePayDebt} isLoading={saving} disabled={!debtAmount || parseFloat(debtAmount) <= 0}>Ödemeyi Onayla</Button></>}>
+                {selectedCustomer && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div style={{ textAlign: 'center', padding: '1rem', background: 'var(--bg-body)', borderRadius: 'var(--radius-sm)' }}>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>MÜŞTERİ</div>
+                            <div style={{ fontSize: '1rem', fontWeight: 700 }}>{selectedCustomer.FullName}</div>
+                            <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>MEVCUT BORÇ</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--danger)' }}>₺{selectedCustomer.DebtBalance.toFixed(2)}</div>
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
+                                Ödeme Tutarı (₺)
+                            </label>
+                            <input type="number" value={debtAmount} onChange={e => setDebtAmount(e.target.value)}
+                                placeholder="0.00" autoFocus min={0} max={selectedCustomer.DebtBalance} step="0.01"
+                                style={{
+                                    width: '100%', padding: '0.75rem', fontSize: '1.25rem', fontWeight: 700, textAlign: 'center',
+                                    background: 'var(--bg-body)', border: '2px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)',
+                                    color: 'var(--text-main)', fontFamily: 'inherit', outline: 'none'
+                                }}
+                                onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
+                                onBlur={e => e.target.style.borderColor = 'var(--border-subtle)'} />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            {[selectedCustomer.DebtBalance * 0.25, selectedCustomer.DebtBalance * 0.5, selectedCustomer.DebtBalance].map((amt, i) => (
+                                <button key={i} onClick={() => setDebtAmount(amt.toFixed(2))}
+                                    style={{
+                                        flex: 1, padding: '0.5rem', background: i === 2 ? 'var(--accent-primary)' : 'var(--bg-body)',
+                                        border: i === 2 ? 'none' : '1px solid var(--border-subtle)',
+                                        borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontFamily: 'inherit',
+                                        fontSize: '0.75rem', fontWeight: 600,
+                                        color: i === 2 ? '#fff' : 'var(--text-main)', transition: 'background 0.1s'
+                                    }}>
+                                    {i === 0 ? '%25' : i === 1 ? '%50' : 'Tamamı'}
+                                </button>
+                            ))}
+                        </div>
+
+                        {debtAmount && parseFloat(debtAmount) > 0 && (
+                            <div style={{
+                                textAlign: 'center', padding: '0.75rem', borderRadius: 'var(--radius-sm)',
+                                background: 'rgba(34,197,94,0.08)', border: '1px solid var(--success)'
+                            }}>
+                                <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>ÖDEME SONRASI KALAN BORÇ</div>
+                                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--success)' }}>
+                                    ₺{Math.max(0, selectedCustomer.DebtBalance - (parseFloat(debtAmount) || 0)).toFixed(2)}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </Modal>
         </div>
     );

@@ -8,6 +8,7 @@ import styles from './Sidebar.module.css';
 import { Button } from '@/components/ui/Button';
 import { getLowStockProducts } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import eventBus from '@/lib/eventBus';
 
 const menuGroups = [
     {
@@ -47,8 +48,14 @@ export default function Sidebar() {
     const { employee, logout } = useAuth();
     const [lowStockCount, setLowStockCount] = useState(0);
 
-    useEffect(() => {
+    const refreshLowStock = () => {
         getLowStockProducts().then(data => setLowStockCount(data?.length || 0));
+    };
+
+    useEffect(() => {
+        refreshLowStock();
+        const unsub = eventBus.on('stock-change', refreshLowStock);
+        return () => unsub();
     }, []);
 
     const userRole = employee?.Role ?? 2;

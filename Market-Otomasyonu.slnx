@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="Market-Otomasyonu/Market-Otomasyonu.csproj" />
+  <Project Path="MarketOtomasyonuSetup/MarketOtomasyonuSetup.vdproj" Type="Installer">
+    <Build />
+  </Project>
 </Solution>

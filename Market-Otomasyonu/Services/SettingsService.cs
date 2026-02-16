@@ -49,7 +49,7 @@ namespace Market_Otomasyonu.Services
             }
             catch (Exception ex)
             {
-                return $"{{\"success\":false,\"message\":\"{ex.Message}\"}}";
+                return System.Text.Json.JsonSerializer.Serialize(new { success = false, message = ex.Message });
             }
         }
 
@@ -70,11 +70,11 @@ namespace Market_Otomasyonu.Services
 
                 File.Copy(dbPath, backupPath, true);
                 await Task.CompletedTask;
-                return $"{{\"success\":true,\"message\":\"Yedek başarıyla oluşturuldu: {backupName}\"}}";
+                return System.Text.Json.JsonSerializer.Serialize(new { success = true, message = $"Yedek başarıyla oluşturuldu: {backupName}" });
             }
             catch (Exception ex)
             {
-                return $"{{\"success\":false,\"message\":\"{ex.Message}\"}}";
+                return System.Text.Json.JsonSerializer.Serialize(new { success = false, message = ex.Message });
             }
         }
 
@@ -99,7 +99,7 @@ namespace Market_Otomasyonu.Services
             }
             catch (Exception ex)
             {
-                return $"{{\"success\":false,\"message\":\"{ex.Message}\"}}";
+                return System.Text.Json.JsonSerializer.Serialize(new { success = false, message = ex.Message });
             }
         }
     }

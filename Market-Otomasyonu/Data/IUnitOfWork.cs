@@ -9,7 +9,10 @@ namespace Market_Otomasyonu.Data
         IRepository<Product> Products { get; }
         IRepository<Category> Categories { get; }
         IRepository<Sale> Sales { get; }
+        IRepository<SaleItem> SaleItems { get; }
         IRepository<Customer> Customers { get; }
+        IRepository<Employee> Employees { get; }
+        IRepository<ActivityLog> ActivityLogs { get; }
         
         Task<int> CompleteAsync();
     }
