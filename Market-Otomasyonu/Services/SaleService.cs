@@ -13,7 +13,8 @@ namespace Market_Otomasyonu.Services
         public decimal TotalAmount { get; set; }
         public decimal TaxAmount { get; set; }
         public List<SaleItemDto> Items { get; set; } = new();
-        public int PaymentMethod { get; set; } // 0: Cash, 1: CreditCard
+        public int PaymentMethod { get; set; } // 0: Cash, 1: CreditCard, 2: Debit (Veresiye)
+        public int? CustomerId { get; set; }
     }
 
     public class SaleItemDto
@@ -48,14 +49,14 @@ namespace Market_Otomasyonu.Services
                     Date = DateTime.Now,
                     TotalAmount = saleDto.TotalAmount,
                     TaxAmount = saleDto.TaxAmount,
-                    PaymentMethod = (PaymentMethod)saleDto.PaymentMethod
+                    PaymentMethod = (PaymentMethod)saleDto.PaymentMethod,
+                    CustomerId = saleDto.CustomerId
                 };
 
                 await _unitOfWork.Sales.AddAsync(sale);
 
                 foreach (var itemDto in saleDto.Items)
                 {
-                    // Update Stock
                     var product = await _unitOfWork.Products.GetByIdAsync(itemDto.ProductId);
                     if (product == null) throw new Exception($"Ürün bulunamadı: {itemDto.ProductId}");
 
@@ -65,7 +66,6 @@ namespace Market_Otomasyonu.Services
                     product.StockQuantity -= itemDto.Quantity;
                     _unitOfWork.Products.Update(product);
 
-                    // Create Sale Item
                     var saleItem = new SaleItem
                     {
                         Sale = sale,
@@ -74,15 +74,18 @@ namespace Market_Otomasyonu.Services
                         UnitPrice = itemDto.UnitPrice,
                         TotalPrice = itemDto.Quantity * itemDto.UnitPrice
                     };
-                    // Access items via the collection in the context if needed, but adding to context automatically links if nav props updated
-                    // Actually, simpler to add to Sale or Context directly.
-                    // EF Core usually handles this if we add to the Sale.Items collection, or add to DbSet
-                    // Since specific DbSet for SaleItems exists:
-                    // But we used Generic Repo. Let's rely on navigation property or direct add if we had a repo for it.
-                    // We exposed DbSet<SaleItem> in Context but didn't make a specific Repo property in UnitOfWork interface?
-                    // Wait, UnitOfWork has IRepository<Sale>.
-                    
                     sale.Items.Add(saleItem);
+                }
+
+                // Veresiye satışta müşteri borcunu güncelle
+                if (saleDto.PaymentMethod == 2 && saleDto.CustomerId.HasValue)
+                {
+                    var customer = await _unitOfWork.Customers.GetByIdAsync(saleDto.CustomerId.Value);
+                    if (customer != null)
+                    {
+                        customer.DebtBalance += saleDto.TotalAmount;
+                        _unitOfWork.Customers.Update(customer);
+                    }
                 }
 
                 await _unitOfWork.CompleteAsync();

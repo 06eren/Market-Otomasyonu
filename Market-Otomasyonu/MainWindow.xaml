@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:Market_Otomasyonu"
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
-        Title="Market Otomasyonu" Height="768" Width="1366" WindowStartupLocation="CenterScreen">
+        Title="InnoApp Market Otomayonu" Height="768" Width="1366" WindowStartupLocation="CenterScreen"
+        Icon="InnoAppMarketIkon.png">
     <Grid>
         <wv2:WebView2 Name="webView" />
     </Grid>

@@ -12,6 +12,8 @@ namespace Market_Otomasyonu.Data
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Sale> Sales { get; set; }
         public DbSet<SaleItem> SaleItems { get; set; }
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -26,12 +28,29 @@ namespace Market_Otomasyonu.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Seed initial data if necessary or configure relationships
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "Gıda", Description = "Temel gıda ürünleri" },
                 new Category { Id = 2, Name = "Temizlik", Description = "Temizlik malzemeleri" },
                 new Category { Id = 3, Name = "Manav", Description = "Sebze ve meyve" }
             );
+
+            // Default admin user (password: "admin123")
+            modelBuilder.Entity<Employee>().HasData(
+                new Employee
+                {
+                    Id = 1,
+                    Username = "admin",
+                    PasswordHash = "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", // SHA256("admin123")
+                    FullName = "Sistem Yöneticisi",
+                    Role = EmployeeRole.Admin,
+                    IsActive = true,
+                    CreatedAt = new DateTime(2026, 1, 1)
+                }
+            );
+
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.Username)
+                .IsUnique();
         }
     }
 }
