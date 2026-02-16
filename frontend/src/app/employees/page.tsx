@@ -9,6 +9,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Tabs } from '@/components/ui/Tabs';
 import { useToast } from '@/components/ui/Toast';
 import { UserCog, Plus, Shield, Edit, Trash2, Activity, Clock, User, Lock } from 'lucide-react';
+import { PageTransition } from '@/components/ui/PageTransition';
 import { getEmployees, addEmployee, updateEmployee, deleteEmployee, getActivityLog } from '@/lib/api';
 
 const roleLabels: Record<number, string> = { 0: 'Yönetici', 1: 'Müdür', 2: 'Kasiyer' };
@@ -81,7 +82,7 @@ export default function EmployeesPage() {
     ];
 
     return (
-        <div>
+        <PageTransition>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                 <div>
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Personel Yönetimi</h1>
@@ -215,6 +216,6 @@ export default function EmployeesPage() {
                     </div>
                 </div>
             </Modal>
-        </div>
+        </PageTransition>
     );
 }

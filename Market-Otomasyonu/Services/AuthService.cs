@@ -84,6 +84,51 @@ namespace Market_Otomasyonu.Services
                 );
             ");
 
+            // ── Accounting module schema migration ──
+            // Add new Employee columns (safe: SQLite ignores if column already exists via try/catch)
+            try { ctx.Database.ExecuteSqlRaw("ALTER TABLE Employees ADD COLUMN BaseSalary TEXT NOT NULL DEFAULT '0'"); } catch { }
+            try { ctx.Database.ExecuteSqlRaw("ALTER TABLE Employees ADD COLUMN SgkRate TEXT NOT NULL DEFAULT '14'"); } catch { }
+            try { ctx.Database.ExecuteSqlRaw("ALTER TABLE Employees ADD COLUMN TaxRate TEXT NOT NULL DEFAULT '15'"); } catch { }
+
+            ctx.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS Expenses (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Description TEXT NOT NULL DEFAULT '',
+                    Amount TEXT NOT NULL DEFAULT '0',
+                    Category INTEGER NOT NULL DEFAULT 11,
+                    Date TEXT NOT NULL,
+                    EmployeeId INTEGER,
+                    Notes TEXT,
+                    IsRecurring INTEGER NOT NULL DEFAULT 0,
+                    CreatedAt TEXT NOT NULL,
+                    FOREIGN KEY (EmployeeId) REFERENCES Employees(Id)
+                );
+            ");
+            ctx.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS DebtPayments (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    CustomerId INTEGER NOT NULL,
+                    Amount TEXT NOT NULL DEFAULT '0',
+                    Notes TEXT,
+                    Date TEXT NOT NULL,
+                    FOREIGN KEY (CustomerId) REFERENCES Customers(Id)
+                );
+            ");
+            ctx.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS SalaryPayments (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    EmployeeId INTEGER NOT NULL,
+                    GrossSalary TEXT NOT NULL DEFAULT '0',
+                    NetSalary TEXT NOT NULL DEFAULT '0',
+                    TaxDeduction TEXT NOT NULL DEFAULT '0',
+                    SgkDeduction TEXT NOT NULL DEFAULT '0',
+                    Period TEXT NOT NULL DEFAULT '',
+                    PaidAt TEXT NOT NULL,
+                    Notes TEXT,
+                    FOREIGN KEY (EmployeeId) REFERENCES Employees(Id)
+                );
+            ");
+
             // Seed default admin if no employees exist
             var anyEmployee = ctx.Employees.Any();
             if (!anyEmployee)

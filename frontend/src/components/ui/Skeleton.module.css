@@ -32,3 +32,33 @@
 .mt {
     margin-top: 0.75rem;
 }
+
+/* ── KPI Grid ── */
+.kpiGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.kpiItem {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    border-left: 3px solid var(--bg-surface-active);
+}
+
+/* ── Chart Bars ── */
+.chartBars {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    height: 140px;
+}
+
+.chartCol {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    height: 100%;
+}

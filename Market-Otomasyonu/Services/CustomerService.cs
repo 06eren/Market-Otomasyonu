@@ -122,6 +122,16 @@ namespace Market_Otomasyonu.Services
 
                 customer.DebtBalance -= amount;
                 uow.Customers.Update(customer);
+
+                // Record debt payment history
+                await uow.DebtPayments.AddAsync(new DebtPayment
+                {
+                    CustomerId = customerId,
+                    Amount = amount,
+                    Date = DateTime.Now,
+                    Notes = "Borç ödemesi"
+                });
+
                 await uow.CompleteAsync();
 
                 return System.Text.Json.JsonSerializer.Serialize(new { success = true, message = $"₺{amount:F2} ödeme alındı. Kalan borç: ₺{customer.DebtBalance:F2}", remainingDebt = customer.DebtBalance });

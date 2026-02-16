@@ -14,6 +14,9 @@ namespace Market_Otomasyonu.Data
         public IRepository<Customer> Customers { get; private set; }
         public IRepository<Employee> Employees { get; private set; }
         public IRepository<ActivityLog> ActivityLogs { get; private set; }
+        public IRepository<Expense> Expenses { get; private set; }
+        public IRepository<DebtPayment> DebtPayments { get; private set; }
+        public IRepository<SalaryPayment> SalaryPayments { get; private set; }
 
         public UnitOfWork(MarketContext context)
         {
@@ -25,6 +28,9 @@ namespace Market_Otomasyonu.Data
             Customers = new Repository<Customer>(_context);
             Employees = new Repository<Employee>(_context);
             ActivityLogs = new Repository<ActivityLog>(_context);
+            Expenses = new Repository<Expense>(_context);
+            DebtPayments = new Repository<DebtPayment>(_context);
+            SalaryPayments = new Repository<SalaryPayment>(_context);
         }
 
         public async Task<int> CompleteAsync()

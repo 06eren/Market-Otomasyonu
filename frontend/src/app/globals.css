@@ -214,7 +214,6 @@ button {
   animation: pulse 2s ease-in-out infinite;
 }
 
-/* Stagger children animation */
 .stagger>* {
   animation: fadeIn 0.3s ease forwards;
   opacity: 0;
@@ -242,6 +241,33 @@ button {
 
 .stagger>*:nth-child(6) {
   animation-delay: 250ms;
+}
+
+.stagger>*:nth-child(7) {
+  animation-delay: 300ms;
+}
+
+.stagger>*:nth-child(8) {
+  animation-delay: 350ms;
+}
+
+.stagger>*:nth-child(9) {
+  animation-delay: 400ms;
+}
+
+.stagger>*:nth-child(10) {
+  animation-delay: 450ms;
+}
+
+/* Card hover lift effect */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  border-color: var(--accent-border);
 }
 
 /* ════════════════ UTILITIES ════════════════ */

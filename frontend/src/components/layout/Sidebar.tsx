@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ShoppingCart, Package, FileText, Settings, LogOut, Users, BarChart3, ArrowRightLeft, Wallet, UserCog } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, FileText, Settings, LogOut, Users, BarChart3, ArrowRightLeft, Wallet, UserCog, Calculator } from 'lucide-react';
 import styles from './Sidebar.module.css';
 import { Button } from '@/components/ui/Button';
 import { getLowStockProducts } from '@/lib/api';
@@ -32,6 +32,7 @@ const menuGroups = [
             { name: 'Müşteriler', icon: Users, path: '/customers', roles: [0, 1] },
             { name: 'Fatura & Cari', icon: FileText, path: '/invoices', roles: [0, 1, 2] },
             { name: 'Raporlar', icon: BarChart3, path: '/reports', roles: [0, 1] },
+            { name: 'Muhasebe', icon: Calculator, path: '/accounting', roles: [0, 1] },
         ]
     },
     {

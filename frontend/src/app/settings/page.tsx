@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { Save, Printer, Database, AlertTriangle, Shield, Store } from 'lucide-react';
+import { SkeletonForm } from '@/components/ui/Skeleton';
+import { PageTransition } from '@/components/ui/PageTransition';
 import styles from '../dashboard.module.css';
 import { getSettings, saveSettings, backupDatabase, resetDatabase } from '@/lib/api';
 
@@ -56,10 +58,10 @@ export default function SettingsPage() {
         }
     };
 
-    if (loading) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Yükleniyor...</div>;
+    if (loading) return <div><SkeletonForm /><div style={{ marginTop: '1rem' }}><SkeletonForm /></div></div>;
 
     return (
-        <div>
+        <PageTransition>
             <div className={styles.pageHeader}>
                 <div>
                     <h1 className={styles.title}>Ayarlar</h1>
@@ -130,6 +132,6 @@ export default function SettingsPage() {
                     <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Mevcut veriler otomatik olarak yedeklenecek. Uygulama yeniden başlatıldığında varsayılan veriler oluşturulacak.</p>
                 </div>
             </Modal>
-        </div>
+        </PageTransition>
     );
 }

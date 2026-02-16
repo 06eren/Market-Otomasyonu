@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { Plus, Search, Edit, Trash2, Users, Phone, Mail, Wallet, Banknote } from 'lucide-react';
+import { SkeletonTable, Skeleton } from '@/components/ui/Skeleton';
+import { PageTransition } from '@/components/ui/PageTransition';
 import styles from '../dashboard.module.css';
 import { getCustomers, addCustomer, updateCustomer, deleteCustomer, payDebt } from '@/lib/api';
 import eventBus from '@/lib/eventBus';
@@ -144,8 +146,20 @@ export default function CustomersPage() {
         </div>
     );
 
+    if (loading) {
+        return (
+            <div>
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <Skeleton width="180px" height="24px" />
+                    <Skeleton width="280px" height="12px" className="mt" />
+                </div>
+                <SkeletonTable rows={8} />
+            </div>
+        );
+    }
+
     return (
-        <div>
+        <PageTransition>
             <div className={styles.pageHeader}>
                 <div>
                     <h1 className={styles.title}>Müşteri Yönetimi</h1>
@@ -320,6 +334,6 @@ export default function CustomersPage() {
                     </div>
                 )}
             </Modal>
-        </div>
+        </PageTransition>
     );
 }

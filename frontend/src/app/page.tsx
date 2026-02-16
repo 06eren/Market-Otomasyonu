@@ -5,7 +5,8 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
-import { SkeletonCard } from '@/components/ui/Skeleton';
+import { SkeletonCard, SkeletonKPI, SkeletonChart, SkeletonTable } from '@/components/ui/Skeleton';
+import { PageTransition } from '@/components/ui/PageTransition';
 import { ArrowUpRight, TrendingUp, Package, ShoppingCart, AlertTriangle, Clock, Download, Plus, DollarSign, Users, ArrowDownRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getDashboardStats, getInvoices, getLowStockProducts, getProducts, getCustomers } from '@/lib/api';
@@ -51,19 +52,18 @@ export default function Home() {
   if (loading) {
     return (
       <div>
-        <div style={{ marginBottom: '2rem' }}>
-          <div style={{ height: '1.75rem', width: '200px', background: 'var(--bg-surface-active)', borderRadius: 'var(--radius-sm)', marginBottom: '0.5rem' }} />
-          <div style={{ height: '1rem', width: '320px', background: 'var(--bg-surface-active)', borderRadius: 'var(--radius-sm)' }} />
-        </div>
-        <div className={styles.statsGrid}>
-          <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
+        <SkeletonKPI count={4} />
+        <div style={{ marginTop: '1.5rem' }}><SkeletonChart /></div>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
+          <SkeletonTable rows={6} />
+          <SkeletonCard />
         </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <PageTransition>
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.title}>Panel Özeti</h1>
@@ -76,7 +76,7 @@ export default function Home() {
       </div>
 
       {/* KPI Kartları */}
-      <div className={styles.statsGrid}>
+      <div className={`${styles.statsGrid} stagger`}>
         <Card className={styles.statCard}>
           <div className={styles.statCardHeader}>
             <span className={styles.statLabel}>Günlük Ciro</span>
@@ -263,6 +263,6 @@ export default function Home() {
           </Card>
         </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

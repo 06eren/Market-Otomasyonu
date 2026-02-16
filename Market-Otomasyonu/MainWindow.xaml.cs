@@ -65,6 +65,7 @@ namespace Market_Otomasyonu
                 var customerService = new Services.CustomerService();
                 var settingsService = new Services.SettingsService();
                 var authService = new Services.AuthService();
+                var accountingService = new Services.AccountingService();
                 
                 await productService.SeedInitialDataAsync();
                 authService.EnsureDatabase();
@@ -75,6 +76,7 @@ namespace Market_Otomasyonu
                 webView.CoreWebView2.AddHostObjectToScript("customerService", customerService);
                 webView.CoreWebView2.AddHostObjectToScript("settingsService", settingsService);
                 webView.CoreWebView2.AddHostObjectToScript("authService", authService);
+                webView.CoreWebView2.AddHostObjectToScript("accountingService", accountingService);
 
                 // Navigate to the app
                 webView.CoreWebView2.Navigate("http://market.app/index.html");

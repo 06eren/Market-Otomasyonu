@@ -14,6 +14,9 @@ namespace Market_Otomasyonu.Data
         public DbSet<SaleItem> SaleItems { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
+        public DbSet<Expense> Expenses { get; set; }
+        public DbSet<DebtPayment> DebtPayments { get; set; }
+        public DbSet<SalaryPayment> SalaryPayments { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

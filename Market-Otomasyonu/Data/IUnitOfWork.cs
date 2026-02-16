@@ -13,6 +13,9 @@ namespace Market_Otomasyonu.Data
         IRepository<Customer> Customers { get; }
         IRepository<Employee> Employees { get; }
         IRepository<ActivityLog> ActivityLogs { get; }
+        IRepository<Expense> Expenses { get; }
+        IRepository<DebtPayment> DebtPayments { get; }
+        IRepository<SalaryPayment> SalaryPayments { get; }
         
         Task<int> CompleteAsync();
     }

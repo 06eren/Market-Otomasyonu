@@ -160,3 +160,64 @@ export async function getActivityLog(count: number = 50): Promise<any[]> {
     const raw = await callService('authService', 'GetActivityLogAsync', count);
     return parseJson(raw, []);
 }
+
+// ─── Accounting Service ────────────────────────────────────
+export async function addExpense(data: any): Promise<any> {
+    const raw = await callService('accountingService', 'AddExpenseAsync', JSON.stringify(data));
+    return parseJson(raw, { success: false });
+}
+
+export async function getExpenses(startDate: string, endDate: string): Promise<any[]> {
+    const raw = await callService('accountingService', 'GetExpensesAsync', startDate, endDate);
+    return parseJson(raw, []);
+}
+
+export async function deleteExpense(id: number): Promise<any> {
+    const raw = await callService('accountingService', 'DeleteExpenseAsync', id);
+    return parseJson(raw, { success: false });
+}
+
+export async function getExpenseSummary(startDate: string, endDate: string): Promise<any> {
+    const raw = await callService('accountingService', 'GetExpenseSummaryAsync', startDate, endDate);
+    return parseJson(raw, { TotalExpenses: 0, Count: 0, ByCategory: [] });
+}
+
+export async function getPendingSalaries(): Promise<any[]> {
+    const raw = await callService('accountingService', 'GetPendingSalariesAsync');
+    return parseJson(raw, []);
+}
+
+export async function paySalary(data: any): Promise<any> {
+    const raw = await callService('accountingService', 'PaySalaryAsync', JSON.stringify(data));
+    return parseJson(raw, { success: false });
+}
+
+export async function payAllSalaries(): Promise<any> {
+    const raw = await callService('accountingService', 'PayAllSalariesAsync');
+    return parseJson(raw, { success: false });
+}
+
+export async function getSalaryHistory(): Promise<any[]> {
+    const raw = await callService('accountingService', 'GetSalaryHistoryAsync');
+    return parseJson(raw, []);
+}
+
+export async function getTaxSummary(year: number): Promise<any> {
+    const raw = await callService('accountingService', 'GetTaxSummaryAsync', year);
+    return parseJson(raw, {});
+}
+
+export async function getProfitLoss(startDate: string, endDate: string): Promise<any> {
+    const raw = await callService('accountingService', 'GetProfitLossAsync', startDate, endDate);
+    return parseJson(raw, {});
+}
+
+export async function getMonthlySummary(year: number): Promise<any[]> {
+    const raw = await callService('accountingService', 'GetMonthlySummaryAsync', year);
+    return parseJson(raw, []);
+}
+
+export async function getDebtPaymentHistory(customerId: number): Promise<any[]> {
+    const raw = await callService('accountingService', 'GetDebtPaymentHistoryAsync', customerId);
+    return parseJson(raw, []);
+}

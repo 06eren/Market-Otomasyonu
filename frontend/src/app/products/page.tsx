@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { Plus, Search, Edit, Trash2, Package } from 'lucide-react';
+import { SkeletonTable, Skeleton } from '@/components/ui/Skeleton';
+import { PageTransition } from '@/components/ui/PageTransition';
 import styles from '../dashboard.module.css';
 import { getProducts, addProduct, updateProduct, deleteProduct, getCategories } from '@/lib/api';
 
@@ -148,8 +150,20 @@ export default function ProductsPage() {
         </div>
     );
 
+    if (loading) {
+        return (
+            <div>
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <Skeleton width="180px" height="24px" />
+                    <Skeleton width="240px" height="12px" className="mt" />
+                </div>
+                <SkeletonTable rows={8} />
+            </div>
+        );
+    }
+
     return (
-        <div>
+        <PageTransition>
             <div className={styles.pageHeader}>
                 <div>
                     <h1 className={styles.title}>Ürün Yönetimi</h1>
@@ -246,6 +260,6 @@ export default function ProductsPage() {
                     <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Bu işlem geri alınamaz.</p>
                 </div>
             </Modal>
-        </div>
+        </PageTransition>
     );
 }

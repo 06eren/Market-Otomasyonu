@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Tabs } from '@/components/ui/Tabs';
 import { ProgressBar } from '@/components/ui/ProgressBar';
-import { SkeletonCard, SkeletonTable } from '@/components/ui/Skeleton';
+import { SkeletonCard, SkeletonTable, SkeletonKPI, SkeletonChart } from '@/components/ui/Skeleton';
+import { PageTransition } from '@/components/ui/PageTransition';
 import {
     TrendingUp, Package, ShoppingCart, Wallet, BarChart3, PieChart, Calendar,
     ArrowUp, ArrowDown, DollarSign, Users, AlertTriangle, FileText, Download
@@ -68,19 +69,14 @@ export default function ReportsPage() {
     if (loading) {
         return (
             <div>
-                <div style={{ marginBottom: '2rem' }}>
-                    <div style={{ height: '2rem', width: '200px', background: 'var(--bg-surface-active)', borderRadius: 'var(--radius-sm)', marginBottom: '0.5rem' }} />
-                    <div style={{ height: '1rem', width: '300px', background: 'var(--bg-surface-active)', borderRadius: 'var(--radius-sm)' }} />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-                    <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
-                </div>
+                <SkeletonKPI count={4} />
+                <div style={{ marginTop: '1.5rem' }}><SkeletonChart /></div>
             </div>
         );
     }
 
     return (
-        <div>
+        <PageTransition>
             <div className={styles.pageHeader}>
                 <div>
                     <h1 className={styles.title}>Raporlar & Analiz</h1>
@@ -346,6 +342,6 @@ export default function ReportsPage() {
                     </div>
                 </>
             )}
-        </div>
+        </PageTransition>
     );
 }
