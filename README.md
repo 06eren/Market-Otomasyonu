@@ -33,3 +33,4 @@ Projeyi yerel ortamınızda çalıştırmak veya geliştirmek isterseniz:
 1. Repoyu klonlayın:
    ```bash
    git clone [https://github.com/06eren/Market-Otomasyonu.git](https://github.com/06eren/Market-Otomasyonu.git)
+.
